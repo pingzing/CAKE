@@ -2,3 +2,5 @@
 *.vcxproj.*
 /Debug/**
 /Release/**
+*.aps
+CAKE.log
