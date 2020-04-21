@@ -7,25 +7,25 @@
 
 Cake MENU
 BEGIN
-POPUP "Decoration"
-BEGIN
-MENUITEM "Settings", IDM_SETTINGS
-END
-POPUP "Candles"
-BEGIN
-MENUITEM "Burning", IDM_BURNING
-END
+    POPUP "Decoration"
+    BEGIN
+        MENUITEM "Settings", IDM_SETTINGS
+    END
+    POPUP "Candles"
+    BEGIN
+        MENUITEM "Burning", IDM_BURNING
+    END
 END
 
-SettingsBox DIALOG 20, 20, 172, 90
+SettingsBox DIALOGEX 20, 20, 172, 96
 STYLE WS_POPUP | WS_DLGFRAME
+//CAPTION "Settings" // Commenting this out forces the old Win 1.0 style. Adding it forces the more modern style
 BEGIN
-LTEXT         "Cake Text:" - 1, 8, 10, 48, 8
-EDITTEXT                     ID_CAKETEXT, 52, 8, 112, 12
-LTEXT         "Number of Candles:" - 1, 8, 28, 96, 8
-EDITTEXT                   ID_NUMCANDLES, 112, 26, 24, 12
-CHECKBOX "Flashing & Fireworks" ID_FLASH, 8, 46, 96, 12, BS_AUTOCHECKBOX
-DEFPUSHBUTTON "Ok"                  IDOK, 32, 68, 48, 14
-PUSHBUTTON    "Cancel"          IDCANCEL, 96, 68, 48, 14
+    LTEXT                       "Cake Text:" -1, 8, 10, 48, 8
+    EDITTEXT                     ID_CAKETEXT, 52, 8, 112, 12
+    LTEXT               "Number of Candles:" -1, 8, 28, 96, 8
+    EDITTEXT                   ID_NUMCANDLES, 112, 26, 24, 12
+    CHECKBOX "Flashing && Fireworks" ID_FLASH, 8, 46, 96, 12, BS_AUTOCHECKBOX
+    DEFPUSHBUTTON "Ok"                  IDOK, 32, 68, 48, 14
+    PUSHBUTTON    "Cancel"          IDCANCEL, 96, 68, 48, 14
 END
-

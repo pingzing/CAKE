@@ -1,8 +1,8 @@
 /*-----------------------------------------------------
    CAKE.C programmed by Charles Petzold, November 1985
+   Modified by Neil McAlister, April 2020
   -----------------------------------------------------*/
 #include <windows.h>
-#include <winexp.h>
 #include "cake.h"
 int rand();
 
@@ -11,6 +11,7 @@ char strCake[80] = "<text>";
 int cCandles = 1;
 BOOL bFlash = FALSE;
 HANDLE hInst;
+HBRUSH hbrBackground;
 
 long FAR PASCAL WndProc(HWND, unsigned, WORD, LONG);
 BOOL FAR PASCAL SettingsProc(HWND, unsigned, WORD, LONG);
@@ -27,19 +28,22 @@ int    nCmdShow;
     HWND     hwnd;
     MSG      msg;
     WNDCLASS wndclass;
-
-    hInst = hInstance;
+    
+    hInst = hInstance;    
 
     if (!hPrevInstance)
     {
+        hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
+
         wndclass.style = CS_HREDRAW | CS_VREDRAW;
+        wndclass.hbrBackground = 
         wndclass.lpfnWndProc = WndProc;
         wndclass.cbClsExtra = 0;
         wndclass.cbWndExtra = 0;
         wndclass.hInstance = hInstance;
         wndclass.hIcon = LoadIcon(NULL, IDI_APPLICATION);
         wndclass.hCursor = LoadCursor(NULL, IDC_ARROW);
-        wndclass.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
+        wndclass.hbrBackground = hbrBackground;
         wndclass.lpszMenuName = szAppName;
         wndclass.lpszClassName = szAppName;
 
@@ -48,10 +52,10 @@ int    nCmdShow;
     }
 
     hwnd = CreateWindow(szAppName, "Birthday Cake",
-        WS_TILEDWINDOW, 0, 0, 0, 0,
+        WS_TILEDWINDOW, 0, 0, 680, 400,
         NULL, NULL, hInstance, NULL);
 
-    ShowWindow(hwnd, SHOW_FULLSCREEN);
+    ShowWindow(hwnd, SW_SHOWNORMAL);
     UpdateWindow(hwnd);
 
     while (GetMessage(&msg, NULL, 0, 0))
@@ -61,7 +65,6 @@ int    nCmdShow;
     }
     return (int)msg.wParam;
 }
-
 
 long FAR PASCAL WndProc(hwnd, iMessage, wParam, lParam)
 HWND     hwnd;
@@ -86,11 +89,12 @@ LONG     lParam;
     int         i;
     PAINTSTRUCT ps;
     RECT        rect;
+    HMENU       hmenu;
 
     switch (iMessage)
     {
     case WM_CREATE:
-        lpSettingsProc = MakeProcInstance((FARPROC)SettingsProc, hInst);
+        lpSettingsProc = MakeProcInstance((FARPROC)SettingsProc, hInst);        
 
         hdc = GetDC(hwnd);
         for (i = 0; i < 3; i++)
@@ -104,8 +108,7 @@ LONG     lParam;
         switch (wParam)
         {
         case IDM_SETTINGS:
-            if (DialogBox(hInst, "SettingsBox", /* MAKEINTRESOURCE(IDD_SETTINGS), */
-                hwnd, lpSettingsProc))
+            if (DialogBox(hInst, "SettingsBox", hwnd, lpSettingsProc))
             {
                 if (bFlash)
                 {
@@ -123,13 +126,36 @@ LONG     lParam;
             break;
 
         case IDM_BURNING:
-            SetTimer(hwnd, 1, 1, NULL);
+            // Toggle checked state
+            hmenu = GetMenu(hwnd);
+            MENUITEMINFO menuItem = { 0 };
+            menuItem.cbSize = sizeof(MENUITEMINFO);
+            menuItem.fMask = MIIM_STATE;
+            GetMenuItemInfo(hmenu, IDM_BURNING, FALSE, &menuItem);
+
+            if (menuItem.fState == MFS_CHECKED) {
+                menuItem.fState = MFS_UNCHECKED;
+                // Stop burning, redraw candles
+                KillTimer(hwnd, 1);
+                InvalidateRect(hwnd, NULL, TRUE);
+            }
+            else {
+                menuItem.fState = MFS_CHECKED;
+                // Start burning;
+                SetTimer(hwnd, 1, 1, NULL);
+            }
+            SetMenuItemInfo(hmenu, IDM_BURNING, FALSE, &menuItem);
+
             break;
         }
         break;
 
     case WM_PAINT:
         hdc = BeginPaint(hwnd, &ps);
+
+        // Redraw the background, to account for window dimensions possibly having changed
+        GetClientRect(hwnd, &rect);
+        FillRect(hdc, &rect, hbrBackground);
 
         SelectObject(hdc, (HANDLE)CreateSolidBrush(clrIcing));
 
@@ -150,9 +176,9 @@ LONG     lParam;
 
         SelectObject(hdc, GetStockObject(BLACK_PEN));
 
-        MoveTo(hdc, (short)pt1.x, (short)pt1.y);
+        MoveToEx(hdc, (short)pt1.x, (short)pt1.y, NULL);
         LineTo(hdc, (short)pt1.x, (short)pt2.y);
-        MoveTo(hdc, (short)pt2.x, (short)pt1.y);
+        MoveToEx(hdc, (short)pt2.x, (short)pt1.y, NULL);
         LineTo(hdc, (short)pt2.x, (short)pt2.y);
 
         DisplayText(hdc, pt1, pt2, ht);
@@ -293,7 +319,7 @@ int i;
     SelectObject(hdcMem, (HANDLE)hbm);
 
     SetRect(&rect, 0, 0, 15, 25);
-    FillRect(hdcMem, &rect, (HBRUSH)GetStockObject(BLACK_BRUSH));
+    FillRect(hdcMem, &rect, hbrBackground);
 
     SelectObject(hdcMem, (HANDLE)CreateSolidBrush(RGB(0xFF, 0xFF, 0)));
     SelectObject(hdcMem, (HANDLE)GetStockObject(NULL_PEN));
@@ -379,5 +405,3 @@ short ht;
     SetBkMode(hdc, OPAQUE);
     DeleteObject(SelectObject(hdc, GetStockObject(SYSTEM_FONT)));
 }
-
-
