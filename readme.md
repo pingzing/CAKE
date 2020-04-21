@@ -4,5 +4,5 @@ CAKE.C is a Windows 1.0 application that displays an animated birthday cake, wit
 
 This version has been slightly modified to:
  - Compile on Windows 10 in VS2019
- - Allow toggling the candles back off
+ - Allow toggling the candle burning back off
  - Display a consistently black background
